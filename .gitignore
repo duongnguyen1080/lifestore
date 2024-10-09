@@ -1,0 +1,37 @@
+# Python virtual environment
+/venv/
+
+# Environment variables
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+output.log
+
+# Node modules
+/lifestore-frontend/node_modules/
+
+# Build outputs
+/lifestore-frontend/dist/
+
+# IDE specific files
+.vscode/
+
+# OS generated files
+.DS_Store
+
+# Backup files
+life-store-api-backup/
+
+# Temporary files
+/lifestore-frontend/to_delete/
+
+# Keep requirements file
+!/life-store-api/requirements.txt
+
+# Ignore configuration files with potential secrets
+pyvenv.cfg
