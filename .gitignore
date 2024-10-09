@@ -1,5 +1,6 @@
 # Python virtual environment
-/venv/
+.venv
+life-store-api/venv
 
 # Environment variables
 .env
