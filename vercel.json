@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "functions": {
+      "api/*.py": {
+        "runtime": "python3.9"
+      }
+    },
+    "routes": [
+      { "src": "/api/quote", "dest": "/api/quote.py" },
+      { "src": "/api/learn-more", "dest": "/api/learn_more.py" },
+      { "src": "/api/subscribe", "dest": "/api/email_subscription.py" }
+    ]
+  }
