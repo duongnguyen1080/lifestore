@@ -1,7 +1,6 @@
-from flask import Blueprint, request, jsonify
+from http.server import BaseHTTPRequestHandler
 from utils import get_claude_response, APILimitError, InvalidResponseError, is_valid_quote
-
-quote_bp = Blueprint('quote', __name__)
+import json
 
 def create_prompt(user_question):
     return f"""You are a knowledgeable assistant specializing in philosophy. Your task is to provide a relevant quote from a philosopher based on the following question or topic:
@@ -21,33 +20,31 @@ Please strictly follow these guidelines:
 
 Failure to follow this format exactly will be considered an error."""
 
-@quote_bp.route('/api/quote', methods=['POST'])
-def get_quote():
-    user_question = request.json['query']
-    prompt = create_prompt(user_question)
-    
-    try:
-        quote = get_claude_response(prompt)
+class handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data.decode('utf-8'))
         
-        if not is_valid_quote(quote):
-            raise InvalidResponseError("Invalid quote format or length")
+        user_question = data['query']
+        prompt = create_prompt(user_question)
         
-        return jsonify({"quote": quote})
-    
-    except APILimitError as e:
-        return jsonify({
-            "error": e.user_message,
-            "dev_error": e.dev_message
-        }), 429
-    
-    except InvalidResponseError as e:
-        return jsonify({
-            "error": e.user_message,
-            "dev_error": e.dev_message
-        }), 400
-    
-    except Exception as e:
-        return jsonify({
-            "error": "An unexpected error occurred. Please try again later.",
-            "dev_error": str(e)
-        }), 500
+        try:
+            quote = get_claude_response(prompt)
+            
+            if not is_valid_quote(quote):
+                raise InvalidResponseError("Invalid quote format or length")
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"quote": quote}).encode())
+        
+        except APILimitError as e:
+            self.send_error(429, e.user_message)
+        
+        except InvalidResponseError as e:
+            self.send_error(400, e.user_message)
+        
+        except Exception as e:
+            self.send_error(500, "An unexpected error occurred. Please try again later.")

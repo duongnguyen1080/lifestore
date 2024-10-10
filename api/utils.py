@@ -1,6 +1,9 @@
 import os
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential
+import time
+import json
+from http.server import BaseHTTPRequestHandler
 
 CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
@@ -39,6 +42,7 @@ def get_claude_response(prompt, validate_quote=True):
             {"role": "user", "content": prompt}
         ]
     }
+    # Get Claude API response and check valid quote
     
     try:
         response = requests.post(CLAUDE_API_URL, json=data, headers=headers)
@@ -73,3 +77,48 @@ def get_claude_response(prompt, validate_quote=True):
 
 def is_valid_quote(quote):
     return len(quote) >= 50 and quote.startswith('"') and quote.count('"') >= 2 and ' - ' in quote
+
+def rate_limit(handler_instance):
+    client_ip = handler_instance.client_address[0]
+    current_time = time.time()
+    
+    # This is a simple in-memory rate limit. For production, use a distributed cache like Redis
+    if not hasattr(handler_instance, 'rate_limit_data'):
+        handler_instance.rate_limit_data = {}
+    
+    if client_ip in handler_instance.rate_limit_data:
+        last_request_time, count = handler_instance.rate_limit_data[client_ip]
+        if current_time - last_request_time < 60:  # 1 minute window
+            if count >= 10:  # 10 requests per minute
+                return False
+            handler_instance.rate_limit_data[client_ip] = (last_request_time, count + 1)
+        else:
+            handler_instance.rate_limit_data[client_ip] = (current_time, 1)
+    else:
+        handler_instance.rate_limit_data[client_ip] = (current_time, 1)
+    
+    return True
+
+# New error handling function
+def handle_error(handler_instance, status_code, message):
+    handler_instance.send_response(status_code)
+    handler_instance.send_header('Content-type', 'application/json')
+    handler_instance.end_headers()
+    handler_instance.wfile.write(json.dumps({"error": message}).encode())
+
+# New wrapper for request handling
+def handle_request(handler_class):
+    original_do_POST = handler_class.do_POST
+    
+    def wrapped_do_POST(self):
+        if not rate_limit(self):
+            handle_error(self, 429, "Rate limit exceeded")
+            return
+        
+        try:
+            original_do_POST(self)
+        except Exception as e:
+            handle_error(self, 500, str(e))
+    
+    handler_class.do_POST = wrapped_do_POST
+    return handler_class
