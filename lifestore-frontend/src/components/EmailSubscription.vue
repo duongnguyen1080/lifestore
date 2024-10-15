@@ -23,7 +23,7 @@
 <script>
 import axios from 'axios';
 const api = axios.create({
-  baseURL: 'http://localhost:5001'
+  baseURL: 'https://ask-philosophy-mvz8q4mfp-duongnguyen1080s-projects.vercel.app/'
 });
 
 export default {
