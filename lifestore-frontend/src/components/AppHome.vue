@@ -42,7 +42,7 @@
         this.error = ''
   
         try {
-          const response = await axios.post('https://ask-philosophy.vercel.app/api/quote', { query })
+          const response = await axios.post('https://www.ask-philosophy.com/api/quote', { query })
           this.quote = response.data.quote
           this.question = query
         } catch (error) {
