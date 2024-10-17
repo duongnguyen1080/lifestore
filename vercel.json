@@ -1,7 +1,7 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/quote", "destination": "/api/quote.py" },
+    { "source": "/api/quote", "destination": "/api/quote_generator.py" },
     { "source": "/api/learn-more", "destination": "/api/learn_more.py" },
     { "source": "/api/subscribe", "destination": "/api/email_subscription.py" }
   ],
