@@ -71,7 +71,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 20;
+  margin-top: 20px;
   width: 100%;
 }
 
@@ -84,7 +84,7 @@ export default {
   text-align: center;
   margin-bottom: 16px;
   max-width: 100%;
-  padding: 0 20;
+  padding: 0 20px;
   box-sizing: border-box;
 }
 
@@ -93,7 +93,7 @@ export default {
   justify-content: center;
   width: 100%;
   max-width: 471px;
-  padding: 0 20;
+  padding: 0 20px;
   box-sizing: border-box;
 }
 
@@ -104,7 +104,7 @@ export default {
   border: 1px solid #505050;
   box-sizing: border-box;
   border-radius: 8px 0 0 8px;
-  box-shadow: 0 0 10 rgba(0,0,0,0.1);
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
   background-color: #ffffff;
   color: #000000;
   font-size: 14px;
@@ -131,16 +131,14 @@ export default {
 }
 
 .message {
-  margin-top: 10;
+  margin-top: 10px;
   font-size: 14px;
   font-family: "Roboto", sans-serif;
 }
 
-.error {
-  color: #ff0000;
-}
 
-@media (max-width: 480) {
+
+@media (max-width: 480px) {
   .input-container {
     flex-direction: column;
     align-items: stretch;
@@ -148,7 +146,7 @@ export default {
 
   .email-input {
     border-radius: 8px;
-    margin-bottom: 10;
+    margin-bottom: 10px;
   }
 
   .submit-button {
