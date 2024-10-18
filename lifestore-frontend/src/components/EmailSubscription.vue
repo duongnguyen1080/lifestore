@@ -136,8 +136,6 @@ export default {
   font-family: "Roboto", sans-serif;
 }
 
-
-
 @media (max-width: 480px) {
   .input-container {
     flex-direction: column;
