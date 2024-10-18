@@ -21,7 +21,7 @@ Please strictly follow these guidelines:
 
 Failure to follow this format exactly will be considered an error."""
 
-@quote_bp.route('quote', methods=['POST'])
+@quote_bp.route('/api/quote', methods=['POST'])
 def get_quote():
     user_question = request.json['query']
     prompt = create_prompt(user_question)
