@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from utils import get_claude_response, APILimitError, InvalidResponseError
+from .utils import get_claude_response, APILimitError, InvalidResponseError
 
 learn_more_bp = Blueprint('learn_more', __name__)
 
