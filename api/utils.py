@@ -1,6 +1,5 @@
 import os
 import requests
-from tenacity import retry, stop_after_attempt, wait_exponential
 import time
 import json
 from http.server import BaseHTTPRequestHandler
@@ -28,7 +27,6 @@ class InvalidResponseError(BaseCustomError):
             dev_message=dev_message
         )
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def get_claude_response(prompt, validate_quote=True):
     headers = {
         "x-api-key": CLAUDE_API_KEY,
