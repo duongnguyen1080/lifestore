@@ -1,6 +1,7 @@
 # Python virtual environment
 .venv
 api/venv
+.idea
 
 # Environment variables
 .env

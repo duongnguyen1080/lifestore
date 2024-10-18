@@ -1,33 +1,24 @@
-from http.server import BaseHTTPRequestHandler
-import json
-import os
+from flask import Blueprint, request, jsonify
 from sib_api_v3_sdk import Configuration, ApiClient, ContactsApi, CreateContact
+import os
+
+email_bp = Blueprint('email', __name__)
 
 configuration = Configuration()
 configuration.api_key['api-key'] = os.environ.get('BREVO_API_KEY')
 api_client = ApiClient(configuration)
 contacts_api = ContactsApi(api_client)
 
-class handler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        data = json.loads(post_data.decode('utf-8'))
-        
-        email = data.get('email')
-        if not email:
-            self.send_error(400, "Email is required")
-            return
+@email_bp.route('/subscribe', methods=['POST'])
+def subscribe():
+    email = request.json.get('email')
+    if not email:
+        return jsonify({'message': 'Email is required'}), 400
 
-        try:
-            create_contact = CreateContact(email=email, list_ids=[2])
-            contacts_api.create_contact(create_contact)
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({"message": "Subscription successful!"}).encode())
-        
-        except Exception as e:
-            print(f"An error occurred: {str(e)}")
-            self.send_error(500, "An error occurred. Please try again.")
+    try:
+        create_contact = CreateContact(email=email, list_ids=[2])  
+        contacts_api.create_contact(create_contact)
+        return jsonify({'message': 'Subscription successful!'}), 200
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return jsonify({'message': 'An error occurred. Please try again.'}), 500

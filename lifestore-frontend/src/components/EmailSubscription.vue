@@ -23,7 +23,7 @@
 <script>
 import axios from 'axios';
 const api = axios.create({
-  baseURL: 'https://ask-philosophy-mvz8q4mfp-duongnguyen1080s-projects.vercel.app/'
+  baseURL: import.meta.env.VITE_API_ENDPOINT
 });
 
 export default {
@@ -45,7 +45,7 @@ export default {
       
       this.isLoading = true;
       try {
-        const response = await api.post('/api/subscribe', { email: this.email });
+        const response = await api.post('/subscribe', { email: this.email });
         this.showMessage(response.data.message);
         this.email = '';
       } catch (error) {
@@ -71,7 +71,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 20;
   width: 100%;
 }
 
@@ -84,7 +84,7 @@ export default {
   text-align: center;
   margin-bottom: 16px;
   max-width: 100%;
-  padding: 0 20px;
+  padding: 0 20;
   box-sizing: border-box;
 }
 
@@ -93,18 +93,18 @@ export default {
   justify-content: center;
   width: 100%;
   max-width: 471px;
-  padding: 0 20px;
+  padding: 0 20;
   box-sizing: border-box;
 }
 
 .email-input {
   flex-grow: 1;
   height: 36px;
-  padding: 0px 8px;
+  padding: 0 8px;
   border: 1px solid #505050;
   box-sizing: border-box;
   border-radius: 8px 0 0 8px;
-  box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 0 10 rgba(0,0,0,0.1);
   background-color: #ffffff;
   color: #000000;
   font-size: 14px;
@@ -117,11 +117,11 @@ export default {
   cursor: pointer;
   width: 111px;
   height: 36px;
-  padding: 0px 8px;
+  padding: 0 8px;
   border: 0;
   box-sizing: border-box;
   border-radius: 0 6px 6px 0;
-  box-shadow: 0px 2px 8px rgba(0,0,0,0.16);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.16);
   background-color: #030303;
   color: #ffffff;
   font-size: 14px;
@@ -131,7 +131,7 @@ export default {
 }
 
 .message {
-  margin-top: 10px;
+  margin-top: 10;
   font-size: 14px;
   font-family: "Roboto", sans-serif;
 }
@@ -140,7 +140,7 @@ export default {
   color: #ff0000;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 480) {
   .input-container {
     flex-direction: column;
     align-items: stretch;
@@ -148,7 +148,7 @@ export default {
 
   .email-input {
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 10;
   }
 
   .submit-button {

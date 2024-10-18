@@ -28,7 +28,7 @@ export default {
   methods: {
     async fetchAuthorInfo() {
       try {
-        const response = await axios.post('https://ask-philosophy-mvz8q4mfp-duongnguyen1080s-projects.vercel.app/api/learn-more', {
+        const response = await axios.post(`${import.meta.env.VITE_API_ENDPOINT}/learn-more`, {
           authorInfo: this.$route.params.authorInfo,
           userQuestion: this.$route.params.userQuestion,
           quote: this.$route.params.quote

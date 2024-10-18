@@ -1,20 +1,28 @@
-from http.server import BaseHTTPRequestHandler
-import json
+from flask import Blueprint, request, jsonify
 from utils import get_claude_response, APILimitError, InvalidResponseError
 
-class handler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        data = json.loads(post_data.decode('utf-8'))
+learn_more_bp = Blueprint('learn_more', __name__)
+
+@learn_more_bp.route('/learn-more', methods=['POST'])
+def get_author_info():
+    try:
+        data = request.json  
+        if not data:
+            return jsonify({
+                "error": "No data provided. Please try again with your query.",
+                "dev_error": "No JSON data provided"
+            }), 400
 
         authorInfo = data.get('authorInfo')
         userQuestion = data.get('userQuestion')
         quote = data.get('quote')
 
         if not all([authorInfo, userQuestion, quote]):
-            self.send_error(400, "Missing required fields")
-            return
+            missing = [k for k, v in {'authorInfo': authorInfo, 'userQuestion': userQuestion, 'quote': quote}.items() if not v]
+            return jsonify({
+                "error": "Some information is missing. Please try asking your question again.",
+                "dev_error": f"Missing required fields: {', '.join(missing)}"
+            }), 400
 
         prompt = f"""Analyze the following quote and provide detailed information about it, the author, and its relevance to the user's question:
 
@@ -42,17 +50,23 @@ When providing information, use a conversational and engaging tone, as if you're
    
 Use HTML tags for headings and paragraphs but focus on making the content feel human, relatable, and insightful. Use HTML tags to bold each heading and number them, too."""
 
-        try:
-            content = get_claude_response(prompt, validate_quote=False)
+        content = get_claude_response(prompt, validate_quote=False)
+        return jsonify({"content": content})
 
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({"content": content}).encode())
+    except APILimitError as e:
+        return jsonify({ 
+            "error": e.user_message,
+            "dev_error": e.dev_message
+        }), 429 
 
-        except APILimitError as e:
-            self.send_error(429, e.user_message)
-        except InvalidResponseError as e:
-            self.send_error(400, e.user_message)
-        except Exception as e:
-            self.send_error(500, "An unexpected error occurred. Please try again later.")
+    except InvalidResponseError as e:
+        return jsonify({
+            "error": e.user_message,
+            "dev_error": e.dev_message
+        }), 400
+
+    except Exception as e: 
+        return jsonify({
+            "error": "An unexpected error occurred. Please try again later.",
+            "dev_error": str(e)
+        }), 500

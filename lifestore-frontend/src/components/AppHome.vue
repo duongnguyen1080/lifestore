@@ -42,7 +42,7 @@
         this.error = ''
   
         try {
-          const response = await axios.post('https://www.ask-philosophy.com/api/quote', { query })
+          const response = await axios.post(`${import.meta.env.VITE_API_ENDPOINT}/quote`, { query })
           this.quote = response.data.quote
           this.question = query
         } catch (error) {
