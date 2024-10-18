@@ -11,7 +11,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
+    CORS(app, resources={r"/*": {"origins": "http://localhost:8080,https://www.ask-philosophy.com"}})
 
     limiter = Limiter(
         get_remote_address,
