@@ -1,5 +1,8 @@
 from flask import Blueprint, request, jsonify
 from .utils import get_claude_response, APILimitError, InvalidResponseError, is_valid_quote
+from mixpanel_utils import mp
+import uuid
+from datetime import datetime
 
 quote_bp = Blueprint('quote', __name__)
 
@@ -23,6 +26,7 @@ Failure to follow this format exactly will be considered an error."""
 
 @quote_bp.route('/quote', methods=['POST'])
 def get_quote():
+    start_time = datetime.now()
     user_question = request.json['query']
     prompt = create_prompt(user_question)
     
@@ -32,9 +36,26 @@ def get_quote():
         if not is_valid_quote(quote):
             raise InvalidResponseError("Invalid quote format or length")
         
-        return jsonify({"quote": quote})
+        quote_id = str(uuid.uuid4())
+        mp.track(request.remote_addr, 'Quote', {
+            'quote_id': quote_id,
+            'question_text': user_question,
+            'question_length': len(user_question),
+            'page_load_time': (datetime.now() - start_time).total_seconds(),
+            'quote_text': quote,
+            'quote_length': len(quote)
+        })
+        
+        return jsonify({
+            "quote": quote,
+            "quote_id": quote_id  
+        })
     
     except APILimitError as e:
+        mp.track(request.remote_addr, 'Quote Error', {
+            'error_type': 'APILimitError',
+            'response_time': (datetime.now() - start_time).total_seconds()
+        })
         return jsonify({
             "error": e.user_message,
             "dev_error": e.dev_message
