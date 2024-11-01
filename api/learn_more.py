@@ -1,15 +1,10 @@
 from flask import Blueprint, request, jsonify
 from .utils import get_claude_response, APILimitError, InvalidResponseError 
-from mixpanel_utils import mp
-import uuid
-from datetime import datetime
 
 learn_more_bp = Blueprint('learn_more', __name__)
 
 @learn_more_bp.route('/learn-more', methods=['POST'])
 def get_author_info():
-    start_time = datetime.now()
-    content_id = str(uuid.uuid4())
     try:
         data = request.json  
         if not data:
@@ -56,12 +51,6 @@ When providing information, use a conversational and engaging tone, as if you're
 Use HTML tags for headings and paragraphs but focus on making the content feel human, relatable, and insightful. Use HTML tags to bold each heading and number them, too."""
 
         content = get_claude_response(prompt, validate_quote=False)
-        mp.track(request.remote_addr, 'Learn More', {
-            'content_id': content_id,
-            'content': content,
-            'content_length': len(content),
-            'page_load_time': (datetime.now() - start_time).total_seconds(),
-        })
         return jsonify({"content": content})
 
     except APILimitError as e:
