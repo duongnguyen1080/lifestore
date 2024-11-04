@@ -11,7 +11,9 @@ def create_prompt(user_question):
 Please strictly follow these guidelines:
 
 1. Read the user's question or topic.
-2. Select a relevant quote from a philosopher, ensuring diversity by including philosophers amd thinkers from various cultural backgrounds (e.g., Western, Eastern, African, Indigenous, etc.)
+2. Select a relevant quote from a philosopher or thinker.
+3. The quote must be factfully excerpted from an actual work or book of the philosopher.
+4. Choose philosophers amd thinkers from various cultural backgrounds (e.g., Western, Eastern, African, Indigenous, etc.)
 3. Format your response EXACTLY as follows:
    "[QUOTE]" - PHILOSOPHER NAME, SOURCE, PUBLISHED YEAR (if known)
 4. Do not add any text before or after this format.
