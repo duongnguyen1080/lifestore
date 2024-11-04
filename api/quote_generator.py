@@ -12,12 +12,11 @@ Please strictly follow these guidelines:
 
 1. Read the user's question or topic.
 2. Select a relevant quote from a philosopher, ensuring diversity by including philosophers amd thinkers from various cultural backgrounds (e.g., Western, Eastern, African, Indigenous, etc.)
-3. Ensure the quote is from a work published before 1928.
-4. Format your response EXACTLY as follows:
+3. Format your response EXACTLY as follows:
    "[QUOTE]" - PHILOSOPHER NAME, SOURCE, PUBLISHED YEAR (if known)
-5. Do not add any text before or after this format.
-6. Do not explain, interpret, or comment on the quote.
-7. Keep the quote within 100 words.
+4. Do not add any text before or after this format.
+5. Do not explain, interpret, or comment on the quote.
+6. Keep the quote within 100 words.
 
 Failure to follow this format exactly will be considered an error."""
 
