@@ -11,9 +11,10 @@ def create_prompt(user_question):
 Please strictly follow these guidelines:
 
 1. Read the user's question or topic.
-2. Select a relevant quote that is an actual excerpt from a philosopher’s or thinker's original work (e.g., book, essay, lecture) and attributed correctly to both the philosopher and the work. 
-3. If the quote is attributed correctly to a philosopher but the exact work where the quote is excerpted cannot be verified or found, find a new, correctly attributed quote.
+2. Select a relevant quote that must be an actual excerpt from a philosopher’s or thinker's original work (e.g., book, essay, lecture) and attributed correctly to both the philosopher and the work. 
+3. If the quote is attributed correctly to a philosopher but the exact work where the quote is excerpted cannot be verified or found, find a quote new quote must be an actual excerpt from a philosopher’s or thinker's original work.
 4. Choose philosophers amd thinkers from various cultural backgrounds (e.g., Western, Eastern, African, Indigenous, etc.)
+5. Choose longer quote over shorter quote.
 5. Format your response EXACTLY as follows:
    "[QUOTE]" - PHILOSOPHER NAME, SOURCE, PUBLISHED YEAR (if known)
 6. Do not add any text before or after this format.
