@@ -18,7 +18,7 @@ Please strictly follow these guidelines:
    "[QUOTE]" - PHILOSOPHER NAME, SOURCE, PUBLISHED YEAR (if known)
 6. Do not add any text before or after this format.
 7. Do not explain, interpret, or comment on the quote.
-8. Keep the quote within 100 words.
+8. Keep the quote within 50 words.
 
 Failure to follow this format exactly will be considered an error."""
 
