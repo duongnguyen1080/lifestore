@@ -15,7 +15,7 @@ Please strictly follow these guidelines:
 3. Choose philosophers amd thinkers from various cultural backgrounds (e.g., Western, Eastern, African, Indigenous, etc.)
 4. Choose longer quote over shorter quote.
 5. Format your response EXACTLY as follows:
-   "[QUOTE]" - PHILOSOPHER NAME, SOURCE, PUBLISHED YEAR (if known)
+   "[QUOTE]" - PHILOSOPHER NAME, "SOURCE", PUBLISHED YEAR (if known) -
 6. Do not add any text before or after this format.
 7. Do not explain, interpret, or comment on the quote.
 8. Keep the quote within 50 words.
