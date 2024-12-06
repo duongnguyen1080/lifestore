@@ -1,26 +1,28 @@
 from flask import Blueprint, request, jsonify
-from .utils import get_claude_response, APILimitError, InvalidResponseError, is_valid_quote
+from utils import get_claude_response, APILimitError, InvalidResponseError, is_valid_quote, query_all_airtable_books
 
 quote_bp = Blueprint('quote', __name__)
 
 def create_prompt(user_question):
+    book_titles = query_all_airtable_books()
+    book_list = ", ".join([f'"{book.strip()}"' for book in book_titles])
     return f"""You are a knowledgeable assistant specializing in philosophy. Your task is to provide a relevant quote from a philosopher based on the following question or topic:
 
 "{user_question}"
 
 Please strictly follow these guidelines:
 
-1. Read the user's question or topic.
-2. Select a relevant quote that must be an actual excerpt from a philosopher’s or thinker's original work (e.g., book, essay, lecture) and attributed correctly to both the philosopher and the work. 
-3. Choose philosophers amd thinkers from various cultural backgrounds (e.g., Western, Eastern, African, Indigenous, etc.)
-4. Choose longer quote over shorter quote.
-5. Format your response EXACTLY as follows:
-   "[QUOTE]" - PHILOSOPHER NAME, "SOURCE", PUBLISHED YEAR (if known) -
-6. Do not add any text before or after this format.
-7. Do not explain, interpret, or comment on the quote.
-8. Keep the quote within 50 words.
-
-Failure to follow this format exactly will be considered an error."""
+1. Read the user's question or topic carefully.
+2. Provide 5 quotes from the following books: {book_list}.
+3. Each quote must be a JSON array. Each object should include:
+- "quote": The exact text of the quote.
+- "philosopher": The name of the philosopher or thinker.
+- "book_title": The title of the book or source (must match one of the provided titles exactly).
+- "year": The year of publication (leave it blank if unknown).
+- "Amazon Link": The Amazon link to the book (leave it blank if unknown).
+5. Do not include any text or explanation outside of the JSON array.
+6. Ensure that all book titles match exactly with those in the provided list. Failure to do so will cause the response to be rejected.
+7. Any deviation from the format or failure to include all required fields will result in an error."""
 
 @quote_bp.route('/quote', methods=['POST'])
 def get_quote():
@@ -29,10 +31,6 @@ def get_quote():
     
     try:
         quote = get_claude_response(prompt)
-        
-        if not is_valid_quote(quote):
-            raise InvalidResponseError("Invalid quote format or length")
-        
         return jsonify({"quote": quote})
     
     except APILimitError as e:
