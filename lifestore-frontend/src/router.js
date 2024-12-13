@@ -6,13 +6,14 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: AppHome
+    component: AppHome,
+    meta: { preserveState: true }
   },
   {
-    path: '/learn-more/:authorInfo/:userQuestion/:quote',
+    path: '/learn-more',
     name: 'LearnMore',
     component: LearnMore,
-    props: true
+    meta: { preserveState: true }
   }
 ]
 
@@ -21,4 +22,27 @@ const router = createRouter({
   routes
 })
 
-export default router
+let savedState = null;
+
+router.beforeEach((to, from, next) => {
+  console.log('Router guard triggered:', {
+    to: to.name,
+    from: from.name,
+    homeComponent: from.matched[0]?.instances?.default,
+    savedState: router._savedState
+  });
+
+  if (from.name === 'Home' && to.name === 'LearnMore') {
+    const homeComponent = from.matched[0].instances.default;
+    if (homeComponent) {
+      router._savedState = {
+        quotes: homeComponent.quotes,
+        question: homeComponent.question
+      };
+      console.log('State saved:', router._savedState);
+    }
+  }
+  next();
+});
+
+export default router 

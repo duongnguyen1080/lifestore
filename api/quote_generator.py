@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .utils import get_claude_response, APILimitError, InvalidResponseError, is_valid_quote
+from utils import get_claude_response, APILimitError, InvalidResponseError
 
 quote_bp = Blueprint('quote', __name__)
 
@@ -10,30 +10,31 @@ def create_prompt(user_question):
 
 Please strictly follow these guidelines:
 
-1. Read the user's question or topic.
-2. Select a relevant quote that must be an actual excerpt from a philosopher’s or thinker's original work (e.g., book, essay, lecture) and attributed correctly to both the philosopher and the work. 
-3. Choose philosophers amd thinkers from various cultural backgrounds (e.g., Western, Eastern, African, Indigenous, etc.)
-4. Choose longer quote over shorter quote.
-5. Format your response EXACTLY as follows:
+1. Read the user's question or topic carefully.
+2. Select 3 relevant quotes that must be an actual excerpt from a philosopher's or thinker's original work (e.g., book, essay, lecture) and attributed correctly to both the philosopher and the work. 
+3. Each quote must be at least 20 words long.
+4. Ensure at least one quote is from a philosopher who is not a Western philosopher.
+5. Format each quote EXACTLY as follows:
    "[QUOTE]" - PHILOSOPHER NAME, "SOURCE", PUBLISHED YEAR (if known) -
 6. Do not add any text before or after this format.
 7. Do not explain, interpret, or comment on the quote.
-8. Keep the quote within 50 words.
 
-Failure to follow this format exactly will be considered an error."""
+Any deviation from the format or failure to include all required fields will result in an error."""
 
 @quote_bp.route('/quote', methods=['POST'])
 def get_quote():
-    user_question = request.json['query']
-    prompt = create_prompt(user_question)
-    
     try:
-        quote = get_claude_response(prompt)
-        
-        if not is_valid_quote(quote):
-            raise InvalidResponseError("Invalid quote format or length")
-        
-        return jsonify({"quote": quote})
+        user_question = request.json['query']
+        # Check if query is an object instead of string
+        if isinstance(user_question, dict):
+            raise InvalidResponseError("Invalid query format")
+            
+        if not isinstance(user_question, str) or not user_question.strip():
+            raise InvalidResponseError("Query must be a non-empty string")
+            
+        prompt = create_prompt(user_question)
+        quotes = get_claude_response(prompt)
+        return jsonify({"quotes": quotes})
     
     except APILimitError as e:
         return jsonify({

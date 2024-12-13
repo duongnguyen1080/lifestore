@@ -1,7 +1,7 @@
 <template>
     <div class="home">
     <QueryCard 
-      v-if="!quote"
+      v-if="!quotes.length"
       :isLoading="isLoading"
       :error="error"
       :question="question"
@@ -9,9 +9,8 @@
     />
     <ShowQuote 
       v-else
-      :quote="quote"
+      :quotes="quotes"
       :userQuestion="question"
-      @learnMore="openLearnMore"
       @editQuery="resetQuery"
     />
   </div>
@@ -31,10 +30,30 @@
     data() {
       return {
         question: '',
-        quote: '',
+        quotes: [],
         isLoading: false,
         error: ''
       }
+    },
+    created() {
+      console.log('AppHome created:', {
+        route: this.$route.name,
+        quotes: this.quotes,
+        question: this.question
+      });
+      if (this.$router._savedState) {
+        console.log('Restoring state:', this.$router._savedState);
+        this.quotes = this.$router._savedState.quotes;
+        this.question = this.$router._savedState.question;
+        this.$router._savedState = null;
+      }
+    },
+    mounted() {
+      console.log('AppHome mounted:', {
+        route: this.$route.name,
+        quotes: this.quotes,
+        question: this.question
+      });
     },
     methods: {
       async handleSubmit(query) {
@@ -43,7 +62,10 @@
   
         try {
           const response = await axios.post(`${import.meta.env.VITE_API_ENDPOINT}/quote`, { query })
-          this.quote = response.data.quote
+          if (!response.data.quotes || response.data.quotes.length === 0) {
+            throw new Error('No quotes received')
+          }
+          this.quotes = response.data.quotes
           this.question = query
         } catch (error) {
           console.error('Error fetching quote:', error)
@@ -53,20 +75,16 @@
         }
       },
       resetQuery() {
-        this.question = ''
-        this.quote = ''
-        this.error = ''
-      },
-      openLearnMore() {
-        const [quoteText, quoteAuthor] = this.quote.split('-').map(s => s.trim())
-        this.$router.push({
-          name: 'LearnMore',
-          params: {
-            authorInfo: quoteAuthor,
-            userQuestion: this.question,
-            quote: quoteText.replace(/^"|"$/g, '')
-          }
-        })
+        console.log('resetQuery called:', {
+          route: this.$route.name,
+          quotes: this.quotes,
+          question: this.question
+        });
+        if (this.$route.name === 'Home' && !this.$router.savedState) {
+          this.question = ''
+          this.quotes = []
+          this.error = ''
+        }
       }
     }
   }

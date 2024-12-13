@@ -3,9 +3,15 @@ import requests
 import time
 import json
 from http.server import BaseHTTPRequestHandler
+from flask import Blueprint, request, jsonify
+from flask_cors import CORS
+from dotenv import load_dotenv
+
+load_dotenv()
 
 CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
+
 
 class BaseCustomError(Exception):
     def __init__(self, user_message, dev_message):
@@ -27,11 +33,33 @@ class InvalidResponseError(BaseCustomError):
             dev_message=dev_message
         )
 
-def get_claude_response(prompt, validate_quote=True):
+def is_valid_quote(quote_text):
+    """Validate quote format: "[QUOTE]" - PHILOSOPHER NAME, "SOURCE", YEAR"""
+    if not isinstance(quote_text, str):
+        return False
+        
+    # Check basic structure
+    if not (quote_text.startswith('"') and '" -' in quote_text):
+        return False
+    
+    # Check if has philosopher and source
+    parts = quote_text.split('" -')
+    if len(parts) != 2 or ',' not in parts[1]:
+        return False
+        
+    return True
+
+def get_claude_response(prompt, content_type='quote'):
+    if not CLAUDE_API_KEY:
+        raise InvalidResponseError("Claude API key is not set")
+        
     headers = {
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01"
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+        "x-api-key": CLAUDE_API_KEY
     }
+    
+    print(f"Using API key: {CLAUDE_API_KEY[:8]}...") # Only print first 8 chars for security
     
     data = {
         "model": "claude-3-5-sonnet-20240620",
@@ -40,13 +68,13 @@ def get_claude_response(prompt, validate_quote=True):
             {"role": "user", "content": prompt}
         ]
     }
-    # Get Claude API response and check valid quote
     
     try:
         response = requests.post(CLAUDE_API_URL, json=data, headers=headers)
         response.raise_for_status()
         
         claude_response = response.json()
+        print("Claude Response:", claude_response)
         
         if 'error' in claude_response:
             if 'rate limit' in claude_response['error'].lower():
@@ -54,18 +82,32 @@ def get_claude_response(prompt, validate_quote=True):
             else:
                 raise InvalidResponseError(f"API error: {claude_response['error']}")
         
-        content = claude_response['content'][0]['text'].strip()
+        content = claude_response.get('content', [])[0]['text']
+        print("Raw Content:", content)
+
+        if content_type == 'html':
+            return content  # Return HTML content directly
         
-        if validate_quote and not is_valid_quote(content):
-            raise InvalidResponseError("Invalid quote format")
+        # For quote type, continue with quote validation
+        quotes = [q.strip() for q in content.split('\n') if q.strip()]
+        print("Split Quotes:", quotes)
         
-        return content
-    
+        valid_quotes = []
+        for quote in quotes:
+            print("Checking quote:", quote)
+            if is_valid_quote(quote):
+                valid_quotes.append(quote)
+            else:
+                print("Invalid quote format:", quote)
+        
+        print("Valid Quotes:", valid_quotes)
+        return valid_quotes if content_type == 'quote' else content
+        
     except requests.exceptions.RequestException as e:
         raise InvalidResponseError(f"Request failed: {str(e)}")
     
     except (KeyError, IndexError) as e:
-        raise InvalidResponseError(f"Failed to parse API response: {str(e)}")
+        raise InvalidResponseError(f"Failed to parse response: {str(e)}")
     
     except (APILimitError, InvalidResponseError):
         raise
@@ -73,14 +115,10 @@ def get_claude_response(prompt, validate_quote=True):
     except Exception as e:
         raise InvalidResponseError(f"Unexpected error: {str(e)}")
 
-def is_valid_quote(quote):
-    return len(quote) >= 50 and quote.startswith('"') and quote.count('"') >= 2 and ' - ' in quote
-
 def rate_limit(handler_instance):
     client_ip = handler_instance.client_address[0]
     current_time = time.time()
     
-    # This is a simple in-memory rate limit. For production, use a distributed cache like Redis
     if not hasattr(handler_instance, 'rate_limit_data'):
         handler_instance.rate_limit_data = {}
     
@@ -97,14 +135,12 @@ def rate_limit(handler_instance):
     
     return True
 
-# New error handling function
 def handle_error(handler_instance, status_code, message):
     handler_instance.send_response(status_code)
     handler_instance.send_header('Content-type', 'application/json')
     handler_instance.end_headers()
     handler_instance.wfile.write(json.dumps({"error": message}).encode())
 
-# New wrapper for request handling
 def handle_request(handler_class):
     original_do_POST = handler_class.do_POST
     
