@@ -3,14 +3,14 @@ import requests
 import time
 import json
 from http.server import BaseHTTPRequestHandler
-from pyairtable import Api 
+from flask import Blueprint, request, jsonify
+from flask_cors import CORS
+from dotenv import load_dotenv
 
+load_dotenv()
 
 CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
-AIRTABLE_BASE_ID = os.getenv('AIRTABLE_BASE_ID')  
-AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')  
-AIRTABLE_TABLE_ID = os.getenv("AIRTABLE_TABLE_ID")
 
 
 class BaseCustomError(Exception):
@@ -33,27 +33,33 @@ class InvalidResponseError(BaseCustomError):
             dev_message=dev_message
         )
 
-def is_valid_quote(quote_data):
-    required_fields = {"quote", "philosopher", "book_title", "year"}
-
-    if not required_fields.issubset(quote_data.keys()):
+def is_valid_quote(quote_text):
+    """Validate quote format: "[QUOTE]" - PHILOSOPHER NAME, "SOURCE", YEAR"""
+    if not isinstance(quote_text, str):
         return False
+        
+    # Check basic structure
+    if not (quote_text.startswith('"') and '" -' in quote_text):
+        return False
+    
+    # Check if has philosopher and source
+    parts = quote_text.split('" -')
+    if len(parts) != 2 or ',' not in parts[1]:
+        return False
+        
+    return True
 
-    return all(quote_data.get(field, "").strip() for field in required_fields)
-
-def query_all_airtable_books():
-    airtable = Api(AIRTABLE_API_KEY).table(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID)
-    try:
-        records = airtable.all()
-        return [record['fields']['Book Title'] for record in records]
-    except Exception as e:
-        raise InvalidResponseError(f"Error fetching book titles from Airtable: {str(e)}")      
-
-def get_claude_response(prompt, validate_quote=True):
+def get_claude_response(prompt, content_type='quote'):
+    if not CLAUDE_API_KEY:
+        raise InvalidResponseError("Claude API key is not set")
+        
     headers = {
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01"
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+        "x-api-key": CLAUDE_API_KEY
     }
+    
+    print(f"Using API key: {CLAUDE_API_KEY[:8]}...") # Only print first 8 chars for security
     
     data = {
         "model": "claude-3-5-sonnet-20240620",
@@ -62,15 +68,13 @@ def get_claude_response(prompt, validate_quote=True):
             {"role": "user", "content": prompt}
         ]
     }
+    
     try:
-        airtable_books = query_all_airtable_books()
-        print("Books in Airtable:", airtable_books) #debug
-
         response = requests.post(CLAUDE_API_URL, json=data, headers=headers)
         response.raise_for_status()
         
         claude_response = response.json()
-        print("Claude API Response:", claude_response) #debug
+        print("Claude Response:", claude_response)
         
         if 'error' in claude_response:
             if 'rate limit' in claude_response['error'].lower():
@@ -78,42 +82,32 @@ def get_claude_response(prompt, validate_quote=True):
             else:
                 raise InvalidResponseError(f"API error: {claude_response['error']}")
         
-        quotes = claude_response.get('content', [])[0]['text']
-        print("Raw Quotes from API:", quotes) #debug
-        try:
-            quotes_list = json.loads(quotes)
-            if not isinstance(quotes_list, list):
-                raise InvalidResponseError("API response is not a list of quotes")
-        except json.JSONDecodeError:
-            raise InvalidResponseError("Failed to parse API response as JSON")
-        
-        def validate_and_return_quote(item):
-            if not is_valid_quote(item):
-                raise InvalidResponseError("Invalid quote format")
-            print ("Processing quote:", item) #debug
+        content = claude_response.get('content', [])[0]['text']
+        print("Raw Content:", content)
 
-            book_title = item["book_title"].strip().lower()
-            airtable_books_normalized = [title.strip().lower() for title in airtable_books]
-            if book_title not in airtable_books_normalized:
-                raise InvalidResponseError(f"Book not found in Airtable: {book_title}")
-            
-            original_title_index = airtable_books_normalized.index(book_title)
-
-            return {
-                    "quote": item["quote"],
-                    "philosopher": item["philosopher"],
-                    "book_title": airtable_books[original_title_index],
-                    "year": item["year"],
-                    "Amazon Link": item.get("Amazon Link")
-                }
+        if content_type == 'html':
+            return content  # Return HTML content directly
         
-        return [validate_and_return_quote(item) for item in quotes_list]
-    
+        # For quote type, continue with quote validation
+        quotes = [q.strip() for q in content.split('\n') if q.strip()]
+        print("Split Quotes:", quotes)
+        
+        valid_quotes = []
+        for quote in quotes:
+            print("Checking quote:", quote)
+            if is_valid_quote(quote):
+                valid_quotes.append(quote)
+            else:
+                print("Invalid quote format:", quote)
+        
+        print("Valid Quotes:", valid_quotes)
+        return valid_quotes if content_type == 'quote' else content
+        
     except requests.exceptions.RequestException as e:
         raise InvalidResponseError(f"Request failed: {str(e)}")
     
     except (KeyError, IndexError) as e:
-        raise InvalidResponseError(f"Failed to parse API response: {str(e)}")
+        raise InvalidResponseError(f"Failed to parse response: {str(e)}")
     
     except (APILimitError, InvalidResponseError):
         raise
@@ -125,7 +119,6 @@ def rate_limit(handler_instance):
     client_ip = handler_instance.client_address[0]
     current_time = time.time()
     
-    # This is a simple in-memory rate limit. For production, use a distributed cache like Redis
     if not hasattr(handler_instance, 'rate_limit_data'):
         handler_instance.rate_limit_data = {}
     

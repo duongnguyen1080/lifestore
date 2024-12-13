@@ -23,15 +23,42 @@ export default {
     }
   },
   created() {
-    this.fetchAuthorInfo();
+    this.initializeLearnMore();
+  },
+  watch: {
+    // Watch for route query changes
+    '$route.query': {
+      handler: 'initializeLearnMore',
+      immediate: true
+    }
   },
   methods: {
+    initializeLearnMore() {
+      // Reset state
+      this.loading = true;
+      this.error = null;
+      this.authorContent = '';
+
+      // Validate required query parameters
+      const requiredParams = ['quote', 'philosopher', 'source', 'userQuestion'];
+      const missingParams = requiredParams.filter(param => !this.$route.query[param]);
+      
+      if (missingParams.length > 0) {
+        this.error = `Missing required parameters: ${missingParams.join(', ')}`;
+        this.loading = false;
+        return;
+      }
+      
+      this.fetchAuthorInfo();
+    },
     async fetchAuthorInfo() {
       try {
         const response = await axios.post(`${import.meta.env.VITE_API_ENDPOINT}/learn-more`, {
-          authorInfo: this.$route.params.authorInfo,
-          userQuestion: this.$route.params.userQuestion,
-          quote: this.$route.params.quote
+          quote: this.$route.query.quote || '',
+          philosopher: this.$route.query.philosopher || '',
+          source: this.$route.query.source || '',
+          year: this.$route.query.year === '-' ? '' : (this.$route.query.year || ''),
+          userQuestion: this.$route.query.userQuestion || ''
         });
         this.authorContent = response.data.content;
       } catch (error) {

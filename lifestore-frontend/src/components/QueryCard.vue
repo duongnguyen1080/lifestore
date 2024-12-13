@@ -1,22 +1,22 @@
 <template>
   <div class="query-card">
     <h2>{{ question || "What burdens you today?" }}</h2>
-    <form @submit.prevent="handleSubmit" class="query-form">
+    <div class="query-form">
       <input
         v-model="query"
         type="text"
         :placeholder="question ? 'Type your question here' : 'Type your question here'"
         class="question-input"
         :disabled="isLoading"
-        @keyup.enter="handleSubmit"
+        @keyup.enter="() => handleSubmit()"
       />
       <mdicon 
         name="send"
         v-if="query.length >= 5 && !isLoading" 
-        @click="handleSubmit" 
+        @click="() => handleSubmit()"
         class="send-icon"
       />
-    </form>
+    </div>
     <p v-if="error" class="error-message">{{ error }}</p>
   </div>
 </template>
@@ -44,9 +44,10 @@ export default {
     }
   },
   methods: {
-    handleSubmit() {
+    handleSubmit(event) {
       if (this.query.length < 3 || this.isLoading) return
-      this.$emit('submit', this.query)
+      this.$emit('submit', this.query.trim())
+      this.query = ''  // Clear input after submission
     }
   }
 }

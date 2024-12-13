@@ -7,10 +7,6 @@
              rel="noopener noreferrer" 
              class="counseling-link">Philosophical counseling</a> 
           helps people explore their values and find meaning in life through deep reflection.
-          Raise your concern and explore insights from great philosophers to gain clarity and perspective.
-        </p>
-        <p class="footer-text disclaimer">
-          The content is AI-generated and cannot replace professional therapy.
         </p>
         <EmailSubscription />
       </div>
