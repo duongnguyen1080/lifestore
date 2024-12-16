@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from utils import get_claude_response, APILimitError, InvalidResponseError
+from .utils import get_claude_response, APILimitError, InvalidResponseError
 
 quote_bp = Blueprint('quote', __name__)
 
