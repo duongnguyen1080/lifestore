@@ -4,9 +4,9 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 import logging
-from quote_generator import quote_bp
-from learn_more import learn_more_bp
-from email_subscription import email_bp
+from .quote_generator import quote_bp
+from .learn_more import learn_more_bp
+from .email_subscription import email_bp
 
 load_dotenv()
 
